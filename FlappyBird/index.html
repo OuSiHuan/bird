@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<title>Document</title>
+	<style>
+		canvas{
+			border: 1px solid red;
+		}
+	</style>
+</head>
+<body>
+	<canvas id='cv' width=800 height=600 ></canvas>
+	<script src="js/utils.js"></script>
+	<script src="js/sky.js"></script>
+	<script src="js/birds.js"></script>
+	<script src="js/pipe.js"></script>
+	<script src="js/land.js"></script>
+	<script>
+		var cv = document.querySelector('#cv');
+		var ctx = cv.getContext('2d');
+
+		var imgsArr = ['birds', 'land', 'pipe1', 'pipe2', 'sky'];
+		
+
+		//调用
+		Fly.imgsLoad(imgsArr, function(imgList){
+			//判断是否开始游戏
+			var isStart = true;
+			// 存储所有的游戏对象
+		  	var roleList = [];
+			// 下落前段时间
+			var lastTimeFrame = new Date();
+			// 创建小鸟对象
+			var bird = new Fly.Bird({
+				ctx: ctx,
+				img: imgList.birds
+			});
+			// 创建天空对象
+		    for(var i = 0; i < 2; i++) {
+			    roleList.push(
+			      	new Fly.Sky({
+				      	ctx: ctx,
+				      	img: imgList.sky,
+				      	x: imgList.sky.width * i
+				    })
+			    );
+		    }
+		    console.log(Fly.Pipe);
+		    //创建管道对象
+			for(var i = 0; i < 6; i++ ){
+			
+				roleList.push(
+					new Fly.Pipe({
+						ctx: ctx,
+						imgBottom: imgList.pipe1,
+						imgTop: imgList.pipe2,
+						ranNum: 0,
+						x: imgList.pipe1.width * i * 3 + 300,
+						// TopY: ranNum - imgList.pipe2.height,
+						// BottomY: ranNum + 150
+					})
+				);
+			}
+		    // console.log(Fly.Pipe.ranNum);
+			// 创建地面对象
+			for(var i = 0; i < 4 ; i++){
+				roleList.push(
+					new Fly.Land({
+						ctx: ctx,
+						img: imgList.land,
+						x: imgList.land.width * i,
+						y: cv.height - imgList.land.height
+					})
+				);
+			}
+			
+			function render(){
+				//下落后段时间
+				var currentTimeFrame = new Date();
+				//计算差值时间
+				var interval = currentTimeFrame - lastTimeFrame;
+				
+				//把最新时间赋值给上一次时间
+				lastTimeFrame = currentTimeFrame;
+
+				ctx.beginPath();
+				ctx.clearRect(0, 0, cv.width, cv.height);
+				ctx.save();
+				// 绘制所有的游戏对象
+			    roleList.forEach(function( role ) {
+			        role.draw( interval );
+			    });
+				//绘制小鸟
+				bird.draw( interval );
+
+				//碰撞检测
+				//1 碰到天空
+				//2 碰到地面
+				//3 碰到管道
+				if(bird.y <= 18){
+					isStart = false;
+				};
+				if(bird.y >= roleList[9].y - 28){
+					isStart = false;
+				};
+				// console.log(roleList[9].y);
+				// console.log(bird.y);
+				if(ctx.isPointInPath(bird.x + 18, bird.y + 18)) {
+	     			isStart = false;
+	     		}
+	     		console.log(bird.x);
+				ctx.restore();
+
+				if(isStart){
+					window.requestAnimationFrame( render );
+				}
+			};
+
+			window.requestAnimationFrame( render );
+			//点击事件
+			cv.addEventListener('click',function(){
+				// console.log('注册上了吗？')
+				bird.v = -0.4;
+			})
+		})
+
+	</script>
+</body>
+</html>	
